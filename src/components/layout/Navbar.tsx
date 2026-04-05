@@ -1,7 +1,22 @@
+"use client";
+
 import Link from 'next/link';
 import { BookOpen, Users, LayoutDashboard, GraduationCap, Search, LogOut } from 'lucide-react';
+import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar({ role = 'profesor', user }: { role?: 'profesor' | 'admin', user: { name: string, avatar: string } }) {
+
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // eliminar cookie
+    Cookies.remove("token", { path: "/" });
+
+    // redirigir al login
+    router.push("/");
+  };
+
   const profesorLinks: any[] = [];
 
   const adminLinks = [
@@ -20,7 +35,9 @@ export default function Navbar({ role = 'profesor', user }: { role?: 'profesor' 
           </div>
           <div>
             <h1 className="navbar-logo-title">SGA</h1>
-            <span className="navbar-logo-subtitle">Portal {role === 'profesor' ? 'Docente' : 'Administrativo'}</span>
+            <span className="navbar-logo-subtitle">
+              Portal {role === 'profesor' ? 'Docente' : 'Administrativo'}
+            </span>
           </div>
         </div>
 
@@ -40,13 +57,13 @@ export default function Navbar({ role = 'profesor', user }: { role?: 'profesor' 
       <div className="navbar-right">
         <div className="navbar-search-wrapper">
           <Search size={18} className="navbar-search-icon" />
-          <input 
-            type="text" 
-            placeholder="Buscar..." 
+          <input
+            type="text"
+            placeholder="Buscar..."
             className="input navbar-search-input"
           />
         </div>
-        
+
         <div className="navbar-user-section">
           <div className="navbar-user-info">
             <p className="navbar-user-name">{user.name}</p>
@@ -56,7 +73,11 @@ export default function Navbar({ role = 'profesor', user }: { role?: 'profesor' 
           </div>
         </div>
 
-        <button className="btn btn-ghost navbar-logout-btn" title="Cerrar Sesión">
+        <button
+          onClick={handleLogout}
+          className="btn btn-ghost navbar-logout-btn"
+          title="Cerrar Sesión"
+        >
           <LogOut size={20} />
         </button>
       </div>

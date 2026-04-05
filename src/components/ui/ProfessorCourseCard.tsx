@@ -6,18 +6,18 @@ import styles from './ProfessorCourseCard.module.css';
 interface ProfessorCourseCardProps {
   id: string;
   nombre: string;
-  grado: string;
+  code: string;
   estudiantes: number;
-  horario: string;
+
 }
 
-export default function ProfessorCourseCard({ id, nombre, grado, estudiantes, horario }: ProfessorCourseCardProps) {
+export default function ProfessorCourseCard({ id, nombre, code, estudiantes }: ProfessorCourseCardProps) {
   return (
     <div className={`card ${styles.courseCard}`}>
       <div className={styles.header}>
         <div>
           <h3 className={styles.title}>{nombre}</h3>
-          <span className="badge badge-neutral">{grado}</span>
+          <span className="badge badge-neutral">{code}</span>
         </div>
         <div className={styles.iconWrapper}>
           <BookOpen size={20} />
@@ -28,10 +28,6 @@ export default function ProfessorCourseCard({ id, nombre, grado, estudiantes, ho
         <div className={styles.statItem}>
           <Users size={16} />
           <span>{estudiantes} alumnos</span>
-        </div>
-        <div className={styles.statItem}>
-          <Calendar size={16} />
-          <span>{horario}</span>
         </div>
       </div>
 
