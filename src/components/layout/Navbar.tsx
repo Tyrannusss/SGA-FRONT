@@ -5,8 +5,16 @@ import { BookOpen, Users, LayoutDashboard, GraduationCap, Search, LogOut } from 
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 
-export default function Navbar({ role = 'profesor', user }: { role?: 'profesor' | 'admin', user: { name: string, avatar: string } }) {
-
+export default function Navbar({
+  role = 'profesor',
+  user,
+}: {
+  role?: 'profesor' | 'admin';
+  user: {
+    primer_nombre: string;
+    primer_apellido: string;
+  };
+}) {
   const router = useRouter();
 
   const handleLogout = () => {
@@ -17,6 +25,7 @@ export default function Navbar({ role = 'profesor', user }: { role?: 'profesor' 
     router.push("/");
   };
 
+  const fullName = `${user.primer_nombre} ${user.primer_apellido}`;
   const profesorLinks: any[] = [];
 
   const adminLinks = [
@@ -55,21 +64,12 @@ export default function Navbar({ role = 'profesor', user }: { role?: 'profesor' 
       </div>
 
       <div className="navbar-right">
-        <div className="navbar-search-wrapper">
-          <Search size={18} className="navbar-search-icon" />
-          <input
-            type="text"
-            placeholder="Buscar..."
-            className="input navbar-search-input"
-          />
-        </div>
-
         <div className="navbar-user-section">
           <div className="navbar-user-info">
-            <p className="navbar-user-name">{user.name}</p>
+            <p className="navbar-user-name">{fullName}</p>
           </div>
           <div className="navbar-user-avatar">
-            {user.avatar}
+            {fullName[0].toUpperCase()}{fullName[1].toUpperCase()}
           </div>
         </div>
 

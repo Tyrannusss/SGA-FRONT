@@ -7,20 +7,23 @@ import axios from "axios";
 export default function ProfesorDashboard() {
   const [cursos, setCursos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const [profesor, setProfesor] = useState<any>(null);
   useEffect(() => {
-    const fetchCursos = async () => {
+    const fetchData = async () => {
       try {
         setLoading(true);
 
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/professors/my-courses/`,
-          {
-            withCredentials: true, // ✅ importante para cookies
-          }
-        );
+        const [coursesRes, profileRes] = await Promise.all([
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/professors/my-courses`, {
+            withCredentials: true,
+          }),
+          axios.get(`${process.env.NEXT_PUBLIC_API_URL}/professors/me`, {
+            withCredentials: true,
+          }),
+        ]);
 
-        const data = response.data.map((c: any) => ({
+        // Cursos
+        const coursesData = coursesRes.data.map((c: any) => ({
           id: c.id_course,
           code: c.course_code,
           nombre: c.nombre,
@@ -28,20 +31,24 @@ export default function ProfesorDashboard() {
           icon: c.icon || "bg-blue-100 text-blue-600",
         }));
 
-        setCursos(data);
+        setCursos(coursesData);
+
+        // Profesor
+        setProfesor(profileRes.data);
+
       } catch (error) {
-        console.error("Error al obtener cursos:", error);
+        console.error("Error al obtener datos:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCursos();
+    fetchData();
   }, []);
 
   return (
     <div className="animate-fade-in">
-      <h1 className="page-title">Bienvenido, Profesor</h1>
+      <h1 className="page-title">Bienvenido, {profesor?.user?.primer_nombre} {profesor?.user?.primer_apellido}</h1>
       <p className="page-subtitle">
         Aquí está el resumen de tus cursos asignados para el ciclo actual.
       </p>
