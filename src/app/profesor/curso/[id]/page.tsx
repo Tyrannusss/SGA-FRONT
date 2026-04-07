@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Check, Save, Plus, MessageSquare } from 'lucide-react';
+import StudentsTable from '@/components/professor/studentTable';
+import AttendanceTable from '@/components/professor/attendanceTable';
 
 const MOCK_STUDENTS = [
   { id: 'STU001', name: 'Ana Sofía García', average: 8.5, attendance: 95 },
@@ -104,118 +106,23 @@ export default function CursoDetalle({ params }: { params: { id: string } }) {
 
       {/* Tab Content */}
       <div className="card">
-        {/* Estudiantes Tab */}
+
         {activeTab === 'estudiantes' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>Listado de Estudiantes</h2>
+              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>
+                Listado de Estudiantes
+              </h2>
             </div>
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Nombre</th>
-                    <th>Promedio Actual</th>
-                    <th>Asistencia</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {MOCK_STUDENTS.map(student => (
-                    <tr key={student.id}>
-                      <td style={{ fontWeight: 500 }}>{student.id}</td>
-                      <td>{student.name}</td>
-                      <td>{student.average}</td>
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          <div style={{ flex: 1, background: 'var(--surface-hover)', height: '6px', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ width: `${student.attendance}%`, background: student.attendance >= 80 ? 'var(--success)' : 'var(--warning)', height: '100%' }}></div>
-                          </div>
-                          <span style={{ fontSize: '0.75rem', fontWeight: 600 }}>{student.attendance}%</span>
-                        </div>
-                      </td>
-                      <td>
-                        {student.average >= 7 ?
-                          <span className="badge badge-success">Regular</span> :
-                          <span className="badge badge-warning">Riesgo</span>
-                        }
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+
+            <div className="card">
+              <StudentsTable courseId={Number(params.id)} />
             </div>
           </div>
         )}
 
-        {/* Asistencia Tab */}
         {activeTab === 'asistencia' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                <h2 style={{ fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>Registro de Asistencia</h2>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <label htmlFor="attendance-date" style={{ fontSize: '0.875rem', color: 'var(--muted)' }}>Clase del:</label>
-                  <input
-                    id="attendance-date"
-                    type="date"
-                    value={attendanceDate}
-                    onChange={(e) => setAttendanceDate(e.target.value)}
-                    style={{
-                      padding: '0.25rem 0.5rem',
-                      borderRadius: 'var(--radius-sm)',
-                      border: '1px solid var(--border)',
-                      background: 'var(--surface)',
-                      color: 'var(--foreground)',
-                      fontSize: '0.875rem',
-                      outline: 'none'
-                    }}
-                  />
-                </div>
-              </div>
-              <button onClick={handleSaveAttendance} className="btn btn-primary">
-                {attendanceSaved ? <Check size={18} /> : <Save size={18} />}
-                {attendanceSaved ? 'Guardado' : 'Guardar Cambios'}
-              </button>
-            </div>
-
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Estudiante</th>
-                    <th style={{ width: '160px', textAlign: 'center' }}>Presente / Ausente / Notificado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {MOCK_STUDENTS.map(student => (
-                    <tr key={student.id}>
-                      <td>{student.name}</td>
-                      <td style={{ textAlign: 'center' }}>
-                        <button
-                          onClick={() => toggleAttendance(student.id)}
-                          style={{
-                            padding: '0.5rem 1rem',
-                            borderRadius: 'var(--radius-full)',
-                            fontSize: '0.875rem',
-                            fontWeight: 600,
-                            background: attendance[student.id] === 'Presente' ? 'var(--success-bg)' : attendance[student.id] === 'Ausente' ? 'var(--danger-bg)' : 'var(--warning-bg)',
-                            color: attendance[student.id] === 'Presente' ? 'var(--success)' : attendance[student.id] === 'Ausente' ? 'var(--danger)' : 'var(--warning)',
-                            transition: 'all 0.2s',
-                            border: '1px solid transparent',
-                            width: '120px'
-                          }}
-                        >
-                          {attendance[student.id]}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <AttendanceTable courseId={Number(params.id)} />
         )}
 
         {/* Calificaciones Tab */}
