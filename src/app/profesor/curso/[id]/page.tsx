@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft, Check, Save, Plus, MessageSquare } from 'lucide-react';
 import StudentsTable from '@/components/professor/studentTable';
 import AttendanceTable from '@/components/professor/attendanceTable';
+import GradesTable from '@/components/professor/gradesTable';
 
 const MOCK_STUDENTS = [
   { id: 'STU001', name: 'Ana Sofía García', average: 8.5, attendance: 95 },
@@ -124,69 +125,8 @@ export default function CursoDetalle({ params }: { params: { id: string } }) {
         {activeTab === 'asistencia' && (
           <AttendanceTable courseId={Number(params.id)} />
         )}
-
-        {/* Calificaciones Tab */}
         {activeTab === 'calificaciones' && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ fontSize: '1.125rem', fontWeight: 600, margin: 0 }}>Registro de Calificaciones</h2>
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                <button className="btn btn-outline" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <Plus size={18} /> Nueva Evaluación
-                </button>
-                <button onClick={handleSaveGrades} className="btn btn-primary">
-                  {gradesSaved ? <Check size={18} /> : <Save size={18} />}
-                  {gradesSaved ? 'Guardado' : 'Guardar Cambios'}
-                </button>
-              </div>
-            </div>
-
-            <div className="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Estudiante</th>
-                    {MOCK_EVALUATIONS.map(ev => (
-                      <th key={ev.id} style={{ width: '120px' }}>
-                        {ev.title}
-                        <div style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--muted)' }}>{ev.date}</div>
-                      </th>
-                    ))}
-                    <th style={{ width: '100px' }}>Promedio</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {MOCK_STUDENTS.map(student => {
-                    const studentGrades = grades[student.id] || {};
-                    const total = Object.values(studentGrades).reduce((sum, val) => sum + (parseFloat(val) || 0), 0);
-                    const avg = Object.keys(studentGrades).length > 0 ? (total / Object.keys(studentGrades).length).toFixed(1) : '-';
-
-                    return (
-                      <tr key={student.id}>
-                        <td>{student.name}</td>
-                        {MOCK_EVALUATIONS.map(ev => (
-                          <td key={ev.id}>
-                            <input
-                              type="number"
-                              className="input"
-                              style={{ width: '80px', padding: '0.4rem 0.5rem', textAlign: 'center' }}
-                              value={studentGrades[ev.id] || ''}
-                              onChange={(e) => setGrades(prev => ({
-                                ...prev,
-                                [student.id]: { ...(prev[student.id] || {}), [ev.id]: e.target.value }
-                              }))}
-                              min="0" max="10" step="0.1"
-                            />
-                          </td>
-                        ))}
-                        <td style={{ fontWeight: 600 }}>{avg}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <GradesTable courseId={Number(params.id)} />
         )}
 
         {/* Comentarios Tab */}
