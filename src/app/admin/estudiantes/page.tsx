@@ -10,6 +10,14 @@ export default function GestionEstudiantes() {
   const [search, setSearch] = useState("");
   const [filterCurso, setFilterCurso] = useState("");
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 15;
+  const startIndex = (page - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, filterCurso]);
 
   // 🔹 Obtener datos de la API
   useEffect(() => {
@@ -17,17 +25,30 @@ export default function GestionEstudiantes() {
       try {
         setLoading(true);
 
-        const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/students`
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/students/full-info`,
+          {
+            withCredentials: true,
+          }
         );
 
-        // 🔹 Ajusta este mapping según tu API
-        const data = response.data.map((s: any) => ({
+        const data = res.data.map((s: any) => ({
           id: s.id_student,
-          name: s.user?.name || "Sin nombre",
-          curso: s.course?.name || "Sin curso",
-          grado: s.grade?.name || "Sin grado",
-          estado: s.estado || "Activo",
+          name: s.nombre_completo,
+          curso: s.cursos || "Sin curso",
+          promedio: Number(s.promedio_asistencia) || 0,
+          estado:
+            s.estado_cobro === 1
+              ? "Pagado"
+              : s.estado_cobro === 2
+                ? "Pendiente"
+                : s.estado_cobro === 3
+                  ? "No aplica"
+                  : s.estado_cobro === 4
+                    ? "Exento"
+                    : "Desconocido",
+
+
         }));
 
         setEstudiantes(data);
@@ -41,20 +62,24 @@ export default function GestionEstudiantes() {
     fetchEstudiantes();
   }, []);
 
+
   // 🔹 filtros
+
+  const cursos = Array.from(
+    new Set(estudiantes.map((e) => e.curso))
+  );
+
   const filteredEstudiantes = estudiantes.filter((est) => {
+
     const matchesSearch =
       est.name?.toLowerCase().includes(search.toLowerCase()) ||
-      est.id?.toLowerCase().includes(search.toLowerCase());
+      est.id?.toString().includes(search);
 
     const matchesCurso = filterCurso ? est.curso === filterCurso : true;
 
     return matchesSearch && matchesCurso;
   });
-
-  const cursos = Array.from(
-    new Set(estudiantes.map((e) => e.curso))
-  );
+  const paginatedEstudiantes = filteredEstudiantes.slice(startIndex, endIndex);
 
   return (
     <div className="animate-fade-in">
@@ -114,19 +139,30 @@ export default function GestionEstudiantes() {
               <tr>
                 <th>ID</th>
                 <th>Nombre del Estudiante</th>
-                <th>Grado</th>
-                <th>Curso Destacado</th>
+                <th>Promedio de Asistencias</th>
+                <th>Curso</th>
                 <th>Estado</th>
                 <th>Acciones</th>
               </tr>
             </thead>
 
             <tbody>
-              {filteredEstudiantes.map((est) => (
+              {paginatedEstudiantes.map((est) => (
                 <tr key={est.id}>
                   <td style={{ fontWeight: 500 }}>{est.id}</td>
                   <td>{est.name}</td>
-                  <td>{est.grado}</td>
+                  <td>
+                    <span
+                      className={`badge ${est.promedio < 60
+                        ? "badge-error"
+                        : est.promedio < 80
+                          ? "badge-warning"
+                          : "badge-success"
+                        }`}
+                    >
+                      {(est.promedio).toFixed(0)}%
+                    </span>
+                  </td>
                   <td>{est.curso}</td>
                   <td>
                     <span
@@ -152,6 +188,25 @@ export default function GestionEstudiantes() {
             </tbody>
           </table>
         )}
+      </div>
+      <div style={{ marginTop: "1rem", display: "flex", gap: "1rem" }}>
+        <button
+          className="btn"
+          disabled={page === 1}
+          onClick={() => setPage(page - 1)}
+        >
+          Anterior
+        </button>
+
+        <span>Página {page}</span>
+
+        <button
+          className="btn"
+          disabled={endIndex >= filteredEstudiantes.length}
+          onClick={() => setPage(page + 1)}
+        >
+          Siguiente
+        </button>
       </div>
     </div>
   );

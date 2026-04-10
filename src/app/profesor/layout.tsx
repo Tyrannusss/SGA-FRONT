@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
-import Cookies from "js-cookie";
 import axios from "axios";
 
 export default function ProfesorLayout({ children }: { children: React.ReactNode }) {
