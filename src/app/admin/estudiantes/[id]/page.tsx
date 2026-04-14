@@ -1,198 +1,389 @@
 "use client";
 
-import { useState } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, User, Mail, Phone, Calendar, BookOpen, AlertCircle, CheckCircle2, History } from 'lucide-react';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import axios from "axios";
+import { ArrowLeft, User } from "lucide-react";
 
-const MOCK_ESTUDIANTE = {
-  id: 'STU001',
-  name: 'Ana Sofía García',
-  fechaNacimiento: '15/04/2006',
-  email: 'ana.garcia@email.com',
-  telefono: '+54 11 1234-5678',
-  tutor: 'María García (Madre)',
-  estadoPagos: 'Pendiente',
-  deudaTotal: '$15,000',
-  cursosActuales: [
-    { id: 'C01', nombre: 'Matemáticas Avanzadas', profesor: 'Roberto Mendoza' },
-    { id: 'C04', nombre: 'Literatura Contemporánea', profesor: 'Silvia Pérez' }
-  ],
-  historialAcademico: [
-    { curso: 'Matemáticas Básicas', periodo: '2022', notaFinal: 9.5, asistencia: '98%', comentarios: 'Excelente participación.' },
-    { curso: 'Física I', periodo: '2022', notaFinal: 8.0, asistencia: '90%', comentarios: 'Buen trabajo en equipo.' },
-    { curso: 'Historia Nacional', periodo: '2022', notaFinal: 7.5, asistencia: '85%', comentarios: 'Debe mejorar en los ensayos.' }
-  ],
-  historialPagos: [
-    { fecha: '05/10/2023', concepto: 'Cuota Octubre', monto: '$15,000', estado: 'Pendiente' },
-    { fecha: '02/09/2023', concepto: 'Cuota Septiembre', monto: '$15,000', estado: 'Pagado' },
-    { fecha: '04/08/2023', concepto: 'Cuota Agosto', monto: '$15,000', estado: 'Pagado' },
-    { fecha: '01/03/2023', concepto: 'Matrícula Anual', monto: '$25,000', estado: 'Pagado' }
-  ]
-};
+export default function EstudianteDetalle({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const [student, setStudent] = useState<any>(null);
+  const [payments, setPayments] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [tab, setTab] = useState<"academico" | "pagos">("academico");
 
-export default function EstudianteDetalle({ params }: { params: { id: string } }) {
-  const [activeTab, setActiveTab] = useState<'historial' | 'pagos'>('historial');
+  useEffect(() => {
+    const fetchStudent = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/students/${params.id}/full-detail`,
+          { withCredentials: true }
+        );
+
+        const s = res.data;
+
+        setStudent({
+          id: s.id_student,
+          name: s.nombre_completo,
+          estado: s.estado,
+          cursos: s.cursos,
+          asistencia: Number(s.promedio_asistencia),
+          promedio: Number(s.promedio_evaluaciones),
+          evaluaciones: s.evaluaciones || [],
+          comentarios: s.comentarios || [],
+          email: s.email,
+          email_secundario: s.email_secundario,
+          telefono: s.telefono,
+        });
+      } catch (error) {
+        console.error("Error estudiante:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchPayments = async () => {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/liquidaciones/student/${params.id}/summary`,
+          { withCredentials: true }
+        );
+
+        setPayments(res.data);
+      } catch (error) {
+        console.error("Error pagos:", error);
+      }
+    };
+
+    fetchStudent();
+    fetchPayments();
+  }, [params.id]);
+
+  if (loading) return <p>Cargando estudiante...</p>;
+  if (!student) return <p>No se encontró el estudiante</p>;
+
+  const estadoActual = (() => {
+    const cobros = payments?.cobros || [];
+
+    const adeudoTotal = cobros
+      .filter((c: any) => c.estado === "pendiente")
+      .reduce((sum: number, c: any) => sum + Number(c.monto), 0);
+    if (!cobros.length) return null;
+
+    const hayPendientes = cobros.some(
+      (c: any) => c.estado === "pendiente"
+    );
+
+    const todosPagados = cobros.every(
+      (c: any) => c.estado === "pagado"
+    );
+
+    if (hayPendientes) return "adeudo";
+    if (todosPagados) return "al_dia";
+
+    return null;
+  })();
+  const formatPeriodo = (p: string) =>
+    p ? `${p.slice(0, 4)}/${p.slice(4)}` : "";
 
   return (
     <div className="animate-fade-in">
-      <Link href="/admin/estudiantes" className="btn btn-ghost" style={{ padding: '0', marginBottom: '1.5rem', display: 'inline-flex', color: 'var(--muted)' }}>
+
+      {/* BACK */}
+      <Link
+        href="/admin/estudiantes"
+        className="btn btn-ghost"
+        style={{ marginBottom: "1.5rem", display: "inline-flex" }}
+      >
         <ArrowLeft size={20} />
-        Volver a Estudiantes
+        Volver
       </Link>
 
-      <div className="student-detail-grid">
-        
-        {/* Columna Izquierda: Información General */}
-        <div className="card student-profile-card">
-          <div className="student-avatar-container">
-            <div className="student-avatar">
+      {/* HEADER */}
+      <div
+        style={{
+          marginBottom: "2rem",
+          padding: "1.5rem",
+          background: "#f8fafc",
+          borderRadius: "12px",
+        }}
+      >
+        <h1 style={{ fontSize: "2.2rem", fontWeight: "bold" }}>
+          Gestión de Estudiantes
+        </h1>
+        <p style={{ color: "#6b7280" }}>
+          Administración y pagos del estudiante
+        </p>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 2fr",
+          gap: "1.5rem",
+        }}
+      >
+
+        {/* IZQUIERDA */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+
+          {/* PERFIL */}
+          <div className="card" style={{ padding: "1rem" }}>
+            <div style={{ textAlign: "center", marginBottom: "1rem" }}>
               <User size={40} />
+              <h1>{student.name}</h1>
+              <span className="badge badge-neutral">{student.id}</span>
             </div>
-            <h1 className="student-name">{MOCK_ESTUDIANTE.name}</h1>
-            <span className="badge badge-neutral">{params.id}</span>
+
+            <div style={{ marginBottom: "1rem" }}>
+              <span
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: "999px",
+                  backgroundColor:
+                    student.estado === "Activo" ? "#22c55e" : "#ef4444",
+                  color: "white",
+                }}
+              >
+                {student.estado}
+              </span>
+            </div>
+
+            <div>📧 {student.email}</div>
+            <div>📧 {student.email_secundario}</div>
+            <div>📱 {student.telefono}</div>
+            <div>📚 {student.cursos}</div>
           </div>
 
-          <div className="student-info-list">
-            <div className="student-info-item">
-              <Mail size={16} /> {MOCK_ESTUDIANTE.email}
-            </div>
-            <div className="student-info-item">
-              <Phone size={16} /> {MOCK_ESTUDIANTE.telefono}
-            </div>
-            <div className="student-info-item">
-              <Calendar size={16} /> Nacimiento: {MOCK_ESTUDIANTE.fechaNacimiento}
-            </div>
-            <div className="student-info-item">
-              <User size={16} /> Tutor: {MOCK_ESTUDIANTE.tutor}
-            </div>
-          </div>
+          {/* MÉTRICAS */}
+          <div className="card" style={{ padding: "1rem" }}>
+            <h3>Rendimiento</h3>
 
-          <div>
-            <h3 className="student-courses-title">Cursos Actuales</h3>
-            <div className="student-courses-section">
-              {MOCK_ESTUDIANTE.cursosActuales.map(curso => (
-                <div key={curso.id} className="student-course-item">
-                  <div className="student-course-item-name">{curso.nombre}</div>
-                  <div className="student-course-item-prof">
-                    <BookOpen size={12} /> {curso.profesor}
-                  </div>
-                </div>
-              ))}
+            <div style={{ display: "flex", gap: "1rem" }}>
+              <div style={{ flex: 1, textAlign: "center" }}>
+                <p>Asistencia</p>
+                <h2>{student.asistencia.toFixed(0)}%</h2>
+              </div>
+
+              <div style={{ flex: 1, textAlign: "center" }}>
+                <p>Evaluaciones</p>
+                <h2>{student.promedio.toFixed(0)}%</h2>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Columna Derecha: Tabs de Historial y Pagos */}
-        <div>
-          <div className="tabs-container">
+        {/* DERECHA */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+
+          {/* TABS */}
+          <div
+            style={{
+              display: "flex",
+              borderBottom: "1px solid #e5e7eb",
+              gap: "1rem",
+            }}
+          >
             <button
-              onClick={() => setActiveTab('historial')}
-              className={`tab-btn ${activeTab === 'historial' ? 'active' : ''}`}
+              onClick={() => setTab("academico")}
+              style={{
+                padding: "0.75rem",
+                border: "none",
+                background: "transparent",
+                borderBottom:
+                  tab === "academico"
+                    ? "2px solid var(--primary)"
+                    : "2px solid transparent",
+                fontWeight: 500,
+              }}
             >
-              <History size={18} /> Historial Académico
+              Historial Académico
             </button>
+
             <button
-              onClick={() => setActiveTab('pagos')}
-              className={`tab-btn ${activeTab === 'pagos' ? 'active' : ''}`}
+              onClick={() => setTab("pagos")}
+              style={{
+                padding: "0.75rem",
+                border: "none",
+                background: "transparent",
+                borderBottom:
+                  tab === "pagos"
+                    ? "2px solid var(--primary)"
+                    : "2px solid transparent",
+                fontWeight: 500,
+              }}
             >
-              <span>
-                Pagos
-                {MOCK_ESTUDIANTE.estadoPagos === 'Pendiente' && (
-                  <span className="notification-dot" />
-                )}
-              </span>
+              Pagos
             </button>
           </div>
 
-          {activeTab === 'historial' && (
-            <div className="card">
-              <h2 className="section-title">Rendimiento Histórico</h2>
-              <div className="table-container">
+          {/* ACADÉMICO */}
+          {tab === "academico" && (
+            <>
+              <div className="card">
                 <table>
                   <thead>
                     <tr>
                       <th>Curso</th>
-                      <th>Período</th>
-                      <th>Nota Final</th>
-                      <th>Asistencia</th>
-                      <th>Comentario Final</th>
+                      <th>Tipo</th>
+                      <th>Calificación</th>
+                      <th>Fecha</th>
                     </tr>
                   </thead>
+
                   <tbody>
-                    {MOCK_ESTUDIANTE.historialAcademico.map((h, i) => (
+                    {student.evaluaciones.map((ev: any, i: number) => (
                       <tr key={i}>
-                        <td style={{ fontWeight: 500 }}>{h.curso}</td>
-                        <td>{h.periodo}</td>
-                        <td style={{ fontWeight: 600, color: h.notaFinal >= 7 ? 'var(--success)' : 'var(--danger)' }}>{h.notaFinal}</td>
-                        <td>{h.asistencia}</td>
-                        <td style={{ color: 'var(--muted)', fontSize: '0.8rem', maxWidth: '200px' }}>{h.comentarios}</td>
+                        <td>{ev.curso}</td>
+                        <td>{ev.tipo}</td>
+                        <td>{ev.calificacion}</td>
+                        <td>
+                          {new Date(ev.fecha)
+                            .toISOString()
+                            .slice(0, 10)
+                            .replace(/-/g, "/")}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
-            </div>
-          )}
 
-          {activeTab === 'pagos' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {/* Indicador visual de deuda */}
-              {MOCK_ESTUDIANTE.estadoPagos === 'Pendiente' ? (
-                <div className="debt-alert-card">
-                  <div className="debt-alert-info">
-                    <AlertCircle size={32} />
-                    <div>
-                      <h3 className="debt-alert-title">Deuda Pendiente</h3>
-                      <p className="debt-alert-desc">El estudiante tiene pagos atrasados.</p>
-                    </div>
-                  </div>
-                  <div className="debt-alert-action">
-                    <div className="debt-amount">{MOCK_ESTUDIANTE.deudaTotal}</div>
-                    <button className="btn btn-outline btn-danger-outline">Registrar Pago</button>
-                  </div>
-                </div>
-              ) : (
-                <div className="success-alert-card">
-                  <CheckCircle2 size={32} />
-                  <div>
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0 }}>Estado de cuenta al día</h3>
-                    <p style={{ margin: 0, opacity: 0.9 }}>No hay deudas pendientes registradas.</p>
-                  </div>
-                </div>
-              )}
-
+              {/* COMENTARIOS */}
               <div className="card">
-                <h2 className="section-title">Historial de Transacciones</h2>
-                <div className="table-container">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Fecha</th>
-                        <th>Concepto</th>
-                        <th>Monto</th>
-                        <th>Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {MOCK_ESTUDIANTE.historialPagos.map((p, i) => (
-                        <tr key={i}>
-                          <td>{p.fecha}</td>
-                          <td style={{ fontWeight: 500 }}>{p.concepto}</td>
-                          <td style={{ fontWeight: 600 }}>{p.monto}</td>
-                          <td>
-                            <span className={`badge ${p.estado === 'Pagado' ? 'badge-success' : 'badge-danger'}`}>
-                              {p.estado}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                {student.comentarios.length === 0 ? (
+                  <p style={{ color: "gray" }}>Sin comentarios</p>
+                ) : (
+                  student.comentarios.map((c: any, i: number) => (
+                    <div
+                      key={i}
+                      style={{
+                        padding: "1rem",
+                        marginBottom: "1rem",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "10px",
+                      }}
+                    >
+                      <p>{c.comentario || c.texto}</p>
+                    </div>
+                  ))
+                )}
               </div>
-            </div>
+            </>
           )}
 
+          {/* PAGOS */}
+          {tab === "pagos" && (
+            <>
+              {(() => {
+                const cobros = payments?.cobros || [];
+
+                const adeudoTotal = cobros
+                  .filter((c: any) => c.estado === "pendiente")
+                  .reduce((sum: number, c: any) => sum + Number(c.monto), 0);
+
+                const estado =
+                  !cobros.length
+                    ? null
+                    : (() => {
+                      const adeudoTotal = cobros
+                        .filter((c: any) => c.estado === "pendiente")
+                        .reduce((sum: number, c: any) => sum + Number(c.monto), 0);
+
+                      const hayPendientes = cobros.some(
+                        (c: any) => c.estado === "pendiente"
+                      );
+
+                      if (adeudoTotal === 0) return "al_dia";
+                      if (hayPendientes) return "adeudo";
+
+                      return "al_dia";
+                    })();
+
+                return (
+                  <>
+                    {/* ESTADO ACTUAL */}
+                    <div
+                      style={{
+                        padding: "1.5rem",
+                        border: "1px solid #e5e7eb",
+                        borderRadius: "12px",
+                        textAlign: "center",
+                      }}
+                    >
+                      <h3 style={{ fontSize: "1.2rem", marginBottom: "0.5rem" }}>
+                        Estado de pago
+                      </h3>
+
+                      <div
+                        style={{
+                          fontSize: "2rem",
+                          fontWeight: "bold",
+                          marginBottom: "0.5rem",
+                          color:
+                            estado === "al_dia"
+                              ? "#166534"
+                              : estado === "adeudo"
+                                ? "#991b1b"
+                                : "#374151",
+                        }}
+                      >
+                        {estado === "adeudo" && "⚠ Adeudo"}
+                        {estado === "al_dia" && "✔ Al día"}
+                        {!estado && "Sin estado"}
+                      </div>
+
+                      {estado === "adeudo" && (
+                        <div
+                          style={{
+                            fontSize: "1.5rem",
+                            fontWeight: "600",
+                            color: "#991b1b",
+                          }}
+                        >
+                          Deuda total: ${adeudoTotal.toLocaleString("es-MX")}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* HISTORIAL */}
+                    <div className="card">
+                      <h3>Historial de pagos</h3>
+
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Periodo</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                          </tr>
+                        </thead>
+
+                        <tbody>
+                          {cobros.map((pago: any) => (
+                            <tr key={pago.id_cobro}>
+                              <td>{formatPeriodo(pago.periodo)}</td>
+                              <td>${pago.monto}</td>
+                              <td>{pago.estado}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+
+                      {cobros.length === 0 && (
+                        <p style={{ color: "gray", marginTop: "1rem" }}>
+                          Sin registros de pagos
+                        </p>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
+            </>
+          )}
         </div>
       </div>
     </div>

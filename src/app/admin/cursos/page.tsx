@@ -12,18 +12,26 @@ const MOCK_CURSOS = [
 export default function GestionCursos() {
   return (
     <div className="animate-fade-in">
-      <div className="admin-page-header">
+      {/* Header */}<div
+        className="admin-page-header"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+
         <div>
           <h1 className="page-title">Gestión de Cursos</h1>
           <p className="page-subtitle">Crea, edita y asigna profesores a los cursos académicos.</p>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'start', marginBottom: '1rem' }}>
-          <button className="btn btn-primary">
-            <Plus size={18} />
-            Crear Curso
-          </button>
-        </div>
+        <button className="btn btn-primary" style={{ alignItems: "center", alignContent: "right" }}>
+          <Plus size={18} />
+          Crear Curso
+        </button>
+
       </div>
+
 
       <div className="course-grid">
         {MOCK_CURSOS.map(curso => (

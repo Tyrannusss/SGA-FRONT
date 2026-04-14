@@ -11,7 +11,7 @@ export default function GestionEstudiantes() {
   const [filterCurso, setFilterCurso] = useState("");
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
-  const itemsPerPage = 15;
+  const itemsPerPage = 10;
   const startIndex = (page - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
 
@@ -83,15 +83,21 @@ export default function GestionEstudiantes() {
 
   return (
     <div className="animate-fade-in">
-      {/* Header */}
-      <div className="admin-page-header">
+      {/* Header */}<div
+        className="admin-page-header"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
         <div>
           <h1 className="page-title">Gestión de Estudiantes</h1>
           <p className="page-subtitle">
             Administra los perfiles, historial y estado de pagos de todos los estudiantes.
           </p>
         </div>
-        <button className="btn btn-primary">
+        <button className="btn btn-primary" style={{ alignItems: "center", alignContent: "right" }}>
           <UserPlus size={18} />
           Nuevo Estudiante
         </button>
