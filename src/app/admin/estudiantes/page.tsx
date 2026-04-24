@@ -97,10 +97,6 @@ export default function GestionEstudiantes() {
             Administra los perfiles, historial y estado de pagos de todos los estudiantes.
           </p>
         </div>
-        <Link href="/admin/estudiantes/crear" className="btn btn-primary" style={{ alignItems: "center", alignContent: "right" }}>
-          <UserPlus size={18} />
-          Nuevo Estudiante
-        </Link>
       </div>
 
       {/* Filtros */}
