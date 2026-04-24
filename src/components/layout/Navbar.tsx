@@ -31,6 +31,7 @@ export default function Navbar({
   const adminLinks = [
     { href: '/admin/estudiantes', label: 'Estudiantes', icon: Users },
     { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+    { href: '/admin/crear', label: 'Crear Usuario', icon: Users },
   ];
 
   const links = role === 'profesor' ? profesorLinks : adminLinks;
