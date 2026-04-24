@@ -8,16 +8,28 @@ interface AdminCourseCardProps {
   grado: string;
   profesor: string;
   estudiantes: number;
+  activo: boolean;
 }
 
-export default function AdminCourseCard({ nombre, grado, profesor, estudiantes }: AdminCourseCardProps) {
+export default function AdminCourseCard({ nombre, grado, profesor, estudiantes, activo }: AdminCourseCardProps) {
   return (
     <div className={`card ${styles.card}`}>
       <div className={styles.header}>
         <div>
           <h3 className={styles.title}>{nombre}</h3>
-          <span className="badge badge-neutral">{grado}</span>
+
+          <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+            <span className="badge badge-neutral">{grado}</span>
+
+            <span
+              className={`badge ${activo ? "badge-success" : "badge-error"
+                }`}
+            >
+              {activo ? "Activo" : "Inactivo"}
+            </span>
+          </div>
         </div>
+
         <div className={styles.iconWrapper}>
           <BookOpen size={20} />
         </div>
